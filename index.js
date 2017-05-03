@@ -1,16 +1,29 @@
 /**
  * Created by dehol on 2017-05-03.
  */
-const config = require('./config.json');
 const Telegraf = require('telegraf');
 const axios = require('axios');
 const _ = require('lodash');
 
-const CURRENT_ENV = config.currentEnv;
-const app = new Telegraf(config.api[CURRENT_ENV].telegram.token);
+const TelegramToken = process.env.TELEGRAM_TOKEN;
+const AQICNToken = process.env.AQICN_TOKEN;
 
-let compiledData = _.template('DATE: <%= date %>\nCITY: <%= city %> / AQI: <%= aqi %> (<%= dominent %>)\n<%= url %>');
-let compiledSimpleData = _.template('DATE: <%= date %>\nCITY: <%= city %> / AQI: <%= aqi %>\n<%= url %>');
+const app = new Telegraf(TelegramToken);
+
+let compiledData = _.template('DATE: <%= date %>\nCITY: <%= city %>\nAQI: <%= aqi %> (<%= dominent %>, <%= aqiDesc %>)\n<%= url %>');
+let compiledSimpleData = _.template('DATE: <%= date %>\nCITY: <%= city %>\nAQI: <%= aqi %> (<%= aqiDesc %>)\n<%= url %>');
+
+function getAQILevelString(rating) {
+    if (typeof rating == 'string') rating = parseInt(rating, 10)
+    if (typeof rating != 'number') return 'None';
+
+    if (rating < 51) return 'Good';
+    else if (rating < 101) return 'Moderate';
+    else if (rating < 151) return 'Unhealthy for Sensitive Groups';
+    else if (rating < 201) return 'Unhealthy';
+    else if (rating < 301) return 'Very Unhealthy';
+    else return 'Hazardous';
+}
 
 app.command('city', (ctx) => {
     if (!ctx.message.text) ctx.reply('');
@@ -20,13 +33,14 @@ app.command('city', (ctx) => {
         let cityName = cmdParts[1];
         let compiledUrl = _.template('http://api.waqi.info/feed/<%= city %>/?token=<%= token %>');
 
-        axios.get(compiledUrl({city: cityName, token: config.api[CURRENT_ENV].aqicn.token}))
+        axios.get(compiledUrl({city: cityName, token: AQICNToken}))
             .then((response) => {
                 let aqiData = response.data.data;
                 let data = {
                     date: aqiData.time.s + ' ' + aqiData.time.tz,
                     city: aqiData.city.name,
                     aqi: aqiData.aqi,
+                    aqiDesc: getAQILevelString(aqiData.aqi),
                     dominent: aqiData.dominentpol,
                     url: aqiData.city.url
                 };
@@ -47,13 +61,14 @@ app.on('location', (ctx) => {
         let location = ctx.message.location;
         let compiledUrl = _.template('http://api.waqi.info/feed/geo:<%= latitude %>;<%= longitude %>/?token=<%= token %>');
 
-        axios.get(compiledUrl({latitude: location.latitude, longitude: location.longitude, token: config.api[CURRENT_ENV].aqicn.token}))
+        axios.get(compiledUrl({latitude: location.latitude, longitude: location.longitude, token: AQICNToken}))
             .then((response) => {
                 let aqiData = response.data.data;
                 let data = {
                     date: aqiData.time.s + ' ' + aqiData.time.tz,
                     city: aqiData.city.name,
                     aqi: aqiData.aqi,
+                    aqiDesc: getAQILevelString(aqiData.aqi),
                     dominent: aqiData.dominentpol,
                     url: aqiData.city.url
                 };
@@ -74,13 +89,14 @@ app.on('inline_query', (ctx) => {
         let keyword = ctx.inlineQuery.query;
         let compiledUrl = _.template('http://api.waqi.info/search/?keyword=<%= keyword %>&token=<%= token %>');
 
-        axios.get(compiledUrl({keyword: keyword, token: config.api[CURRENT_ENV].aqicn.token}))
+        axios.get(compiledUrl({keyword: keyword, token: AQICNToken}))
             .then((response) => {
                     let aqiStations = response.data.data.map(o => {
                         let d = {
                             date: o.time.stime + ' ' + o.time.tz,
                             city: o.station.name,
                             aqi: o.aqi,
+                            aqiDesc: getAQILevelString(o.aqi),
                             url: "https://aqicn.org/city/" + o.station.url
                         };
                         return {
