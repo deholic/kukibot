@@ -5,10 +5,27 @@ const Telegraf = require('telegraf');
 const axios = require('axios');
 const _ = require('lodash');
 
+// Web Parts
+
+const finalhandler = require('finalhandler')
+const http = require('http')
+const serveStatic = require('serve-static')
+
+// Serve up public/ftp folder
+const serve = serveStatic('public', {'index': ['index.html']})
+
+// Create server
+const server = http.createServer(function onRequest (req, res) {
+    serve(req, res, finalhandler(req, res))
+})
+
+// Listen
+server.listen(8080)
+
+// Telegram Bot Parts
+
 const TelegramToken = process.env.TELEGRAM_TOKEN;
 const AQICNToken = process.env.AQICN_TOKEN;
-
-const app = new Telegraf(TelegramToken);
 
 let compiledData = _.template('DATE: <%= date %>\nCITY: <%= city %>\nAQI: <%= aqi %> (<%= dominent %>, <%= aqiDesc %>)\n<%= url %>');
 let compiledSimpleData = _.template('DATE: <%= date %>\nCITY: <%= city %>\nAQI: <%= aqi %> (<%= aqiDesc %>)\n<%= url %>');
@@ -24,6 +41,8 @@ function getAQILevelString(rating) {
     else if (rating < 301) return 'Very Unhealthy';
     else return 'Hazardous';
 }
+
+const app = new Telegraf(TelegramToken);
 
 app.command('city', (ctx) => {
     if (!ctx.message.text) ctx.reply('');
@@ -103,12 +122,13 @@ app.on('inline_query', (ctx) => {
                             type: 'article',
                             id: "" + o.uid,
                             title: o.station.name,
+                            description: o.station.geo[0] + ', ' + o.station.geo[1],
                             input_message_content: {
                                 message_text: compiledSimpleData(d)
                             }
                         };
                     });
-                    ctx.answerInlineQuery(aqiStations);
+                    ctx.answerInlineQuery(aqiStations, {cache_time: 30});
                 }
             )
             .catch((error) => {
