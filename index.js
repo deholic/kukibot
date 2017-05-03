@@ -11,6 +11,8 @@ const finalhandler = require('finalhandler')
 const http = require('http')
 const serveStatic = require('serve-static')
 
+var port = process.env.PORT || 8080;
+
 // Serve up public/ftp folder
 const serve = serveStatic('public', {'index': ['index.html']})
 
@@ -20,7 +22,7 @@ const server = http.createServer(function onRequest (req, res) {
 })
 
 // Listen
-server.listen(80)
+server.listen(port)
 
 // Telegram Bot Parts
 
