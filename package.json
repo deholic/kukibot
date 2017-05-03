@@ -1,0 +1,16 @@
+{
+  "name": "kuki-bot",
+  "version": "0.0.1",
+  "description": "Air quality information bot on Telegram",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Eui-Gyom, Kim",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^0.16.1",
+    "lodash": "^4.17.4",
+    "telegraf": "^3.6.7"
+  }
+}
