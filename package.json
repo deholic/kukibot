@@ -4,7 +4,8 @@
   "description": "Air quality information bot on Telegram",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js"
   },
   "author": "Eui-Gyom, Kim",
   "license": "MIT",
