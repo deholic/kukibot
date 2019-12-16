@@ -36,12 +36,12 @@ function getAQILevelString(rating) {
     if (typeof rating == 'string') rating = parseInt(rating, 10)
     if (typeof rating != 'number') return 'None';
 
-    if (rating < 51) return 'Good';
-    else if (rating < 101) return 'Moderate';
-    else if (rating < 151) return 'Unhealthy for Sensitive Groups';
-    else if (rating < 201) return 'Unhealthy';
-    else if (rating < 301) return 'Very Unhealthy';
-    else return 'Hazardous';
+    if (rating < 51) return '🟢 Good';
+    else if (rating < 101) return '🟡 Moderate';
+    else if (rating < 151) return '🟠 Unhealthy for Sensitive Groups';
+    else if (rating < 201) return '🔴 Unhealthy';
+    else if (rating < 301) return '🟤 Very Unhealthy';
+    else return '⚫️ Hazardous';
 }
 
 const app = new Telegraf(TelegramToken);
